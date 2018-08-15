@@ -1,0 +1,97 @@
+//initalize constants for resistance formula
+A = 15.4482
+r = 207.927
+C = 0.421661
+
+
+d = L_tot	//end of the pipette
+//Rref = 50
+//Rpip = 50
+n = n_pip1	//counter
+
+
+
+proc SetPipRes(){			//argument: total resistance of pipette in MOhm
+
+	
+//calculating sum_pip geometry factors for axial resistance
+	
+//tip
+sum_pip0=0.0
+for i=0,n_pip0-1 {
+	r_pip0=pip0[i].diam/2					//pipetta sugara
+	sum_pip0+=pip0[i].L/PI/r_pip0/r_pip0
+}
+
+//skeleton	
+sum_pip1=0.0
+for i = 0, n_pip1-1{
+	r_pip1=pip1[i].diam/2					//pipetta sugara
+	sum_pip1 += pip1[i].L/PI/r_pip1/r_pip1
+	}
+	
+	
+//calculating axial resistance in skeleton	
+	sumRes = 0		//counting the total resistance
+	wopen("../Norenberg_pipette/Res.txt")
+
+	for i=0,n_pip1-1 {
+		n -= 1
+		
+		Rseg0.x(n) = A*(exp(-d/r))+C //calculate resistance using the formula
+
+		//Ratio = Rseg0.x(i)/Rref		//fraction of resistance and reference resistance (that was used for calculating the formula)
+		//Rseg0.x(i) = Ratio*Rpip			//actual resistance for an arbitrary electrode resistance
+		if (n == n_pip1-1){
+			Rseg.x(n) = abs(Rseg0.x(n))	//difference between the two value will be the resistance of the segment
+			sumRes += Rseg.x(n)
+			//r_pip1=pip1[i].diam/2	
+			//sum_pip1 = pip1[i].L/PI/r_pip1/r_pip1
+			pip1[n].Ra=Rseg.x(n)/sum_pip1
+			pip1[n].Ra*=100
+			
+			if (pip1[n].Ra < 10e-4){
+			pip1[n].Ra = 10e-4
+			}
+			fprint("%g\t %g\t %g\t %g\t %g\n",n, d,Rseg0.x(n), pip1[n].Ra, sumRes)
+		
+		}else{
+			Rseg.x(n) = abs(Rseg0.x(n+1) - Rseg0.x(n))
+			sumRes += Rseg.x(n)
+			pip1[n].Ra=Rseg.x(n)/sum_pip1
+			pip1[n].Ra*=100
+			if (pip1[n].Ra < 10e-4){
+			pip1[n].Ra = 10e-4
+			}
+			
+			fprint("%g\t %g\t %g\t %g\t %g\n",n, d,Rseg0.x(n), pip1[n].Ra, sumRes)
+	}
+	d += -pip1[n].L			// decrease distance
+	
+	}
+	wopen()
+	
+	//Contribution of the tip
+	Rtip = $1 - sumRes 
+	//contribution of each compartment
+	Re = Rtip/n_pip0
+	
+	//calculating axial resistance of the tip
+	for i=0,n_pip0-1 pip0[i] {
+	Ra=Re/sum_pip0	// this is now in MegaOhm * µm
+	Ra*=100	     		// convert to Ohm cm
+	
+	if ($1 == 0){
+	
+		for i=0,n_pip0-1 pip0[i] {
+		Ra = 0
+		}
+		for i=0,n_pip1-1 pip1[i] {
+		Ra = 0
+		}
+		
+	}
+	
+	
+}
+}
