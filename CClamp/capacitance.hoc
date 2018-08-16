@@ -1,0 +1,90 @@
+A = 1					//counter for interpolation
+Capacity2000 =0.0110585*exp(2000/1684.79)+2.81275	//for interpolation between 1500 uF and 2000 uF 
+d = 0					//measuring distance
+sumCap = 0
+proc SetPipCap(){ 	
+		wopen("../Norenberg_pipette/Capacitance.txt")		
+	//set tip	
+	 for m = 0, n_pip0-1{
+	 
+		d += pip0[m].L
+		
+		
+		if (m == 0){
+		cap.x(m) = 0.0017 * d
+		capacity = cap.x(m)
+		}
+		
+		if (m > 0){
+			cap.x(m) = 0.0017*d
+			//capacity = abs(cap.x(m) - cap.x(m-1))
+			capacity = abs(cap.x(m) - sumCap)
+			}
+		sumCap += capacity
+		surf = 2*PI*pip0[m].L*pip0[m].diam
+		pip0[m].cm = capacity/surf
+		fprint("%g\t %g\t %g\t %g\t %g\n", m, d, cap.x(m), capacity, sumCap)
+}	 
+	//set skeleton	
+		// 20-2000 um: linear C - d
+		
+		for n = 0, n_pip1-1{
+			
+			d += pip1[n].L
+			if ( d <= 1500) {
+			 
+			 cap.x(n+m) = 0.0017 * d 
+			 //capacity = abs(cap.x(n+m) - cap.x(n+m-1))
+			 capacity = abs(cap.x(n+m) - sumCap)
+			 sumCap += capacity
+			 surf = 2*PI*pip1[n].L*pip1[n].diam
+			 pip1[n].cm = cap.x(n+m)/surf
+			 fprint("%g\t %g\t %g\t %g\t  %g\n", n+m, d, cap.x(n+m),capacity, sumCap)
+								
+			}
+			
+			if(d == 1500)	{
+			
+				start = n+m
+			}
+			
+			
+			if(d > 1500 && d <= 2000){
+
+				Difference = abs(Capacity2000-cap.x(start))
+				seg = (2000-1500)/5 + 1
+				Contribution = Difference/seg
+				cap.x(n+m) = Contribution
+				capacity = cap.x(n+m)
+				sumCap += capacity
+				surf = 2*PI*pip1[n].L*pip1[n].diam
+				pip1[n].cm = capacity/surf		
+				fprint("%g\t %g\t %g\t %g\t %g\n", n+m, d, cap.x(n+m), capacity, sumCap)
+			
+			}
+			if ( d > 2000 && d <= $1 ) {
+			 
+			 surf = 2*PI*pip1[n].L*pip1[n].diam 
+			 //Cseg = 0.0404765*(exp(d/1741.45))+6.54198
+			 
+		
+			 cap.x(n+m) = 0.0110585*exp(d/1684.83)+2.81275
+			 //capacity = abs(cap.x(n+m) - cap.x(n+m-1))
+			 capacity = abs(cap.x(n+m) - sumCap)
+			 sumCap += capacity
+			 pip1[n].cm = capacity/surf
+			 fprint("%g\t %g\t %g\t %g\t  %g\n", n+m, d, cap.x(n+m), capacity, sumCap)
+			 
+			}
+			if (d >= $1){
+			cap.x(n+m) = 1e-006
+			capacity = 1e-006
+			sumCap += capacity
+			pip1[n].cm = 1e-006
+			fprint("%g\t %g\t %g\t %g\t  %g\n", n+m, d, cap.x(n+m), capacity, sumCap)
+			}
+				
+		}
+
+		wopen()
+}

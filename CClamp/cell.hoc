@@ -1,0 +1,25 @@
+create soma
+
+//soma.area = 100
+//soma.L = 5.6419
+//soma.diam = 5.6419
+soma{
+nseg = 10
+L = 5.6419
+diam = 5.6419
+Ra = 1e-007
+cm = 30
+
+insert pas
+e_pas = -80
+g_pas = 0.001
+
+
+/*
+insert hh
+gnabar_hh = 0.12*30
+gkbar_hh = 0.024*30
+gl_hh = 0
+el_hh = -54.3
+*/
+}
