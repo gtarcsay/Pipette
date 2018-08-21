@@ -1,4 +1,4 @@
-A = 1					//counter for interpolation
+A = 1	//aksjdhkajshdkjas				//counter for interpolation
 Capacity2000 =0.0110585*exp(2000/1684.79)+2.81275	//for interpolation between 1500 uF and 2000 uF 
 d = 0					//measuring distance
 sumCap = 0
