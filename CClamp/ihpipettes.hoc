@@ -1,0 +1,127 @@
+// pipettes.hoc
+/*
+defines pipettes for simulations of passive cable models
+*/
+// adapted from Schmidt-Hieber et al. 2007, J Neurosci 27:8430 according to Roth and Häusser 2001, J Physiol 535:445
+
+
+
+
+
+//load_file("bessel.ses")
+celsius = 24
+L_eff = 8400		//length where capacity is a non-zero value along the pipette
+Res_e = 50			//resistance of electrode in MOhm
+PI=3.1415926535897932384626433832795
+//load_file("custominit.hoc")
+load_file("pipgeometry.hoc")
+/*
+create leak 
+
+leak.L=leak.diam=100
+forsec "leak"{
+insert pas
+e_pas=-80
+g_pas=1e9
+leak.cm=0
+leak.Ra=1e-9
+leak.nseg=10
+}
+*/
+/*
+//implement a 100 MOhm resistance 
+proc CreateResistance(){
+	create res
+
+		forsec "res"{
+		diam = 1 
+		L = 100
+		cm = 1e-006
+		insert pas
+		e_pas = -80
+		g_pas = 1e-009
+		nseg=1
+		r_pip=diam/2
+		sum_pip=L/PI/r_pip/r_pip
+		Ra=$1/sum_pip
+		Ra*=100
+		}
+	
+}
+
+CreateResistance(100)
+*/
+//load soma, connect to resistance
+
+load_file("cell.hoc")
+			
+//connect pip0[0](0.0), res(1)		// attach pipette 1 to soma
+//connect res(0), soma(0.5)
+//connect pip0[0](0.0), soma(0.5)
+print "Pipette and soma have been connected."
+
+//BIOPHYSICS OF PIPETTES ------------------------------------------------
+forsec "pip" {
+	insert pas
+	g_pas = 0
+	e_pas = -80
+	nseg=10
+}
+
+
+// Ri calculation: single ri per section is calculated by dividing Ra by the section area (see Koch 1999, Biophysics of Computation, Oxford Univ Press) and this ratio is scaled by the length of each section (this is because doubled length doubles the resistances connected together and resistances connected in series add up)
+//loop calculates the sum of all scaling factors (L/PI/r_pip/r_pip). Since Ra has to be the same for every compartment (specific axial resistance is independent of diameter!) Ra is then calculated dependent on the Re in the following loop
+
+
+objref Rseg0, Rseg, cap
+Rseg0 = new Vector()		//resistance value calculated frome exp. formula will be saved
+Rseg0.resize(n_pip1)
+Rseg = new Vector()			//actual contribution of compartment will be saved 
+Rseg.resize(n_pip1)
+cap = new Vector()			//capacitance values will be saved
+cap.resize(n_pip1+n_pip0)
+
+
+// set pipette axial resistance
+load_file("resistance.hoc")
+SetPipRes(Res_e)					
+
+load_file("capacitance.hoc")
+SetPipCap(L_eff)					//argument: effective length of pipette
+
+//load_file("CurrentClamp.ses")		//load linear circuit to inject current into the pipette
+load_file("xxx.ses")
+
+//load_file("seal1.ses")
+/*	
+objref vecrec
+vecrec = new Vector()
+access soma
+vecrec.record(&v(.5))
+
+proc p(){
+for i =0, vecrec.size()-1 {
+	print vecrec.x(i)
+}
+}
+	*/
+//}
+
+objref f, vec1
+
+proc read1(){
+vec1 = new Vector()
+f = new File()
+f.ropen("command.txt")
+vec1.scanf(f)
+}
+
+read1()
+
+proc feed(){
+vec1.play(&LinearCircuit[0].IClamp, 0.025)
+}
+
+
+
+

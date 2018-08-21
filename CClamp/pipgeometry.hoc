@@ -1,0 +1,57 @@
+// MORPHOLOGY OF PIPETTES ---------------------------------------------------
+//pip0 (the tip) : 0 um - 20 um, its biophysics described by Noerenberg's pipette
+//pip1 (the skeleton) : 20 um - 10000 um 
+
+//initialization
+n_pip0=20			// compartment for each um
+n_pip1 = 476	    // from 20 to 2000 compartment for each 5 um, from 2000 to 10000 compartment for each 100 um (76 + 400)
+create pip0[n_pip0]
+create pip1[n_pip1]
+L_tot0 = 0	// total length of the tip
+
+
+// build up pip
+//tip
+for i=0,n_pip0-2 {
+	connect pip0[i+1](0.0), pip0[i](1.0)
+	
+}
+
+//skeleton
+for i=0,n_pip1-2 {
+	connect pip1[i+1](0.0), pip1[i](1.0)	//szegmenesek összekötögetése n_pip-1 - ig, pip1[0] a pipetta hegye
+	
+}
+
+//define length and diameter of each compartment
+
+for j=0, n_pip0-1 pip0[j]{
+
+diam=0.2+ j * 127.8/(n_pip0+n_pip1-1)
+L = 1
+L_tot0 += L
+
+}
+
+
+L_tot = L_tot0	// total length of the pipette
+
+for i=0,n_pip1-1 pip1[i] {
+
+	diam=pip0[19].diam + (i+1)*127.8/(n_pip0 + n_pip1-1)
+	if (L_tot < 2000){
+	pip1[i].L = 5		// szegmenshossz um
+	
+	}
+
+	if (L_tot > 2000){
+	pip1[i].L = 100
+	}
+	
+	L_tot += pip1[i].L
+}
+
+
+
+	connect pip1[0](0.0), pip0[19](1.0)		// attach skeleton to tip
+	print "Tip and skeleton have been connected."
